@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome - Jharkhand Tourism{% endblock %}
+
+{% block content %}
+<div class="hero-section bg-success text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Discover the Beauty of Jharkhand</h1>
+                <p class="lead mb-4">
+                    Explore the rich cultural heritage, pristine forests, majestic waterfalls, and diverse wildlife 
+                    of Jharkhand - the Land of Forests.
+                </p>
+                <div class="d-grid gap-2 d-md-block">
+                    <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4 me-md-2">
+                        <i class="fas fa-user-plus"></i> Get Started
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-mountain display-1 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row text-center mb-5">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="mb-4">Why Choose Jharkhand Tourism Platform?</h2>
+            <p class="lead text-muted">
+                Your gateway to discovering the hidden gems of Jharkhand with smart digital solutions
+            </p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="text-success mb-3">
+                        <i class="fas fa-map-marked-alt fa-3x"></i>
+                    </div>
+                    <h5 class="card-title">Comprehensive Places Guide</h5>
+                    <p class="card-text text-muted">
+                        Explore detailed information about eco-tourism spots, cultural sites, and adventure destinations 
+                        across Jharkhand with integrated maps.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="text-success mb-3">
+                        <i class="fas fa-robot fa-3x"></i>
+                    </div>
+                    <h5 class="card-title">AI Tourism Assistant</h5>
+                    <p class="card-text text-muted">
+                        Get instant answers about Jharkhand tourism with our intelligent chatbot, featuring voice input 
+                        for hands-free interaction.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="text-success mb-3">
+                        <i class="fas fa-route fa-3x"></i>
+                    </div>
+                    <h5 class="card-title">Smart Navigation</h5>
+                    <p class="card-text text-muted">
+                        Click on any destination and get direct directions via Google Maps, making your travel planning effortless.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <h3 class="mb-4">Experience Jharkhand's Rich Heritage</h3>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Visit sacred sites like Deoghar's Baidyanath Temple
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Explore pristine forests and national parks
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Discover tribal culture and traditions
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Adventure activities and eco-tourism
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <h3 class="mb-4">Platform Features</h3>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        User-friendly interface with responsive design
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        Voice-enabled chatbot for easy interaction
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        Integrated Google Maps for navigation
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        Comprehensive information on all tourist spots
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

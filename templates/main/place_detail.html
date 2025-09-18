@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ place.name }} - Jharkhand Tourism{% endblock %}
+
+{% block extra_css %}
+<style>
+    .place-image {
+        height: 400px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .info-card {
+        border-left: 4px solid #198754;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'places_list' %}">Places</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ place.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Place Image -->
+            <div class="card mb-4">
+                {% if place.image %}
+                <img src="{{ place.image.url }}" class="card-img-top place-image" alt="{{ place.name }}">
+                {% else %}
+                <div class="card-img-top place-image bg-light d-flex align-items-center justify-content-center">
+                    <i class="fas fa-mountain fa-5x text-muted"></i>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Place Information -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h1 class="h3 mb-2">{{ place.name }}</h1>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ place.district }}, Jharkhand
+                            </p>
+                        </div>
+                        <span class="badge bg-{% if place.place_type == 'eco' %}success{% elif place.place_type == 'cultural' %}primary{% elif place.place_type == 'adventure' %}warning{% elif place.place_type == 'religious' %}info{% else %}secondary{% endif %} fs-6">
+                            {{ place.get_place_type_display }}
+                        </span>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5><i class="fas fa-info-circle text-primary me-2"></i>About This Place</h5>
+                        <p class="text-muted">{{ place.description }}</p>
+                    </div>
+
+                    {% if place.nearby_attractions %}
+                    <div class="mb-4">
+                        <h5><i class="fas fa-binoculars text-success me-2"></i>Nearby Attractions</h5>
+                        <p class="text-muted">{{ place.nearby_attractions }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <h5><i class="fas fa-route text-info me-2"></i>How to Reach</h5>
+                        <p class="text-muted">{{ place.how_to_reach }}</p>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-block">
+                        <a href="https://maps.google.com?q={{ place.latitude }},{{ place.longitude }}" 
+                           target="_blank" class="btn btn-success btn-lg">
+                            <i class="fas fa-map-marked-alt me-2"></i>Get Directions
+                        </a>
+                        <button class="btn btn-outline-primary btn-lg" onclick="sharePlace()">
+                            <i class="fas fa-share-alt me-2"></i>Share
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Info -->
+            <div class="card info-card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Quick Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% if place.best_time_to_visit %}
+                        <div class="col-12">
+                            <div class="d-flex">
+                                <i class="fas fa-calendar-alt text-success me-2 mt-1"></i>
+                                <div>
+                                    <small class="text-muted d-block">Best Time to Visit</small>
+                                    <strong>{{ place.best_time_to_visit }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if place.entry_fee %}
+                        <div class="col-12">
+                            <div class="d-flex">
+                                <i class="fas fa-rupee-sign text-warning me-2 mt-1"></i>
+                                <div>
+                                    <small class="text-muted d-block">Entry Fee</small>
+                                    <strong>{{ place.entry_fee }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if place.timings %}
+                        <div class="col-12">
+                            <div class="d-flex">
+                                <i class="fas fa-clock text-info me-2 mt-1"></i>
+                                <div>
+                                    <small class="text-muted d-block">Timings</small>
+                                    <strong>{{ place.timings }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-12">
+                            <div class="d-flex">
+                                <i class="fas fa-map text-primary me-2 mt-1"></i>
+                                <div>
+                                    <small class="text-muted d-block">Coordinates</small>
+                                    <strong>{{ place.latitude }}, {{ place.longitude }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-map me-2"></i>Location</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map" style="height: 300px; width: 100%;"></div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-grid">
+                        <a href="https://maps.google.com?q={{ place.latitude }},{{ place.longitude }}" 
+                           target="_blank" class="btn btn-success">
+                            <i class="fas fa-external-link-alt me-1"></i>Open in Google Maps
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Places -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-compass me-2"></i>Explore More</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'places_list' %}?type={{ place.place_type }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-filter me-1"></i>Similar Places
+                        </a>
+                        <a href="{% url 'places_list' %}?district={{ place.district }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-map-marker-alt me-1"></i>Places in {{ place.district }}
+                        </a>
+                        <a href="{% url 'chatbot' %}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-robot me-1"></i>Ask About This Place
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Google Maps -->
+<script>
+function initMap() {
+    const placeLocation = { lat: {{ place.latitude }}, lng: {{ place.longitude }} };
+    
+    const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 15,
+        center: placeLocation,
+    });
+    
+    const marker = new google.maps.Marker({
+        position: placeLocation,
+        map: map,
+        title: "{{ place.name }}",
+    });
+
+    const infoWindow = new google.maps.InfoWindow({
+        content: `
+            <div>
+                <h6>{{ place.name }}</h6>
+                <p class="mb-1">{{ place.district }}, Jharkhand</p>
+                <small class="text-muted">{{ place.get_place_type_display }}</small>
+            </div>
+        `
+    });
+
+    marker.addListener("click", () => {
+        infoWindow.open(map, marker);
+    });
+    
+    // Open info window by default
+    infoWindow.open(map, marker);
+}
+
+function sharePlace() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ place.name }} - Jharkhand Tourism',
+            text: 'Check out {{ place.name }} in {{ place.district }}, Jharkhand!',
+            url: window.location.href
+        });
+    } else {
+        // Fallback: copy URL to clipboard
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Link copied to clipboard!');
+        });
+    }
+}
+</script>
+
+<script async defer 
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap">
+</script>
+{% endblock %}
