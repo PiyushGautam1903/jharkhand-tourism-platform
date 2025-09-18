@@ -17,8 +17,8 @@
                     <a href="{% url 'places_list' %}" class="btn btn-light">
                         <i class="fas fa-map-marked-alt me-1"></i>Explore Places
                     </a>
-                    <a href="{% url 'chatbot' %}" class="btn btn-outline-light">
-                        <i class="fas fa-robot me-1"></i>Ask Assistant
+                    <a href="{% url 'user_bookings' %}" class="btn btn-outline-light">
+                        <i class="fas fa-bed me-1"></i>My Bookings
                     </a>
                 </div>
             </div>
@@ -33,7 +33,7 @@
             <div class="card bg-primary text-white h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-map-marker-alt fa-2x mb-3"></i>
-                    <h4>{{ places|length }}+</h4>
+                    <h4>{{ total_places }}+</h4>
                     <p class="mb-0">Tourist Places</p>
                 </div>
             </div>
@@ -74,9 +74,9 @@
                 <i class="fas fa-star text-warning me-2"></i>Featured Destinations
             </h3>
             
-            {% if places %}
+            {% if featured_places %}
             <div class="row g-4">
-                {% for place in places %}
+                {% for place in featured_places %}
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 shadow-sm">
                         {% if place.image %}
@@ -146,11 +146,11 @@
                 <div class="col-md-4">
                     <div class="card h-100 border-0 shadow-sm">
                         <div class="card-body text-center p-4">
-                            <i class="fas fa-robot text-success fa-3x mb-3"></i>
-                            <h5>Tourism Assistant</h5>
-                            <p class="text-muted">Get instant help with our AI chatbot</p>
-                            <a href="{% url 'chatbot' %}" class="btn btn-success">
-                                <i class="fas fa-comments me-1"></i>Chat Now
+                            <i class="fas fa-route text-success fa-3x mb-3"></i>
+                            <h5>Plan Itinerary</h5>
+                            <p class="text-muted">Create your personalized travel itinerary</p>
+                            <a href="{% url 'create_itinerary' %}" class="btn btn-success">
+                                <i class="fas fa-plus me-1"></i>Plan Trip
                             </a>
                         </div>
                     </div>

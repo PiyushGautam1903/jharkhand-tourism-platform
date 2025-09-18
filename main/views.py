@@ -5,8 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import TourismPlace, UserProfile, ChatMessage
+from django.conf import settings
+from django.core.paginator import Paginator
+from django.db.models import Q, Avg
 import json
+from .models import TourismPlace, UserProfile, PlacePhoto, PlaceReview, TravelItinerary, AccommodationBooking
 
 def home(request):
     """Home page with login/register options"""
@@ -74,94 +77,282 @@ def logout_view(request):
 @login_required
 def dashboard(request):
     """Main dashboard after login"""
-    places = TourismPlace.objects.all()[:6]  # Featured places
+    # Get featured places
+    featured_places = TourismPlace.objects.filter(is_featured=True).order_by('-rating')[:6]
+    
+    # Get user statistics
+    user_reviews_count = PlaceReview.objects.filter(user=request.user).count()
+    user_bookings_count = AccommodationBooking.objects.filter(user=request.user).count()
+    user_itineraries_count = TravelItinerary.objects.filter(user=request.user).count()
+    
+    # Get recent reviews
+    recent_reviews = PlaceReview.objects.filter(is_verified=True).order_by('-created_at')[:3]
+    
+    # Get place statistics
+    total_places = TourismPlace.objects.count()
+    place_types_count = TourismPlace.objects.values('place_type').distinct().count()
+    
     context = {
-        'places': places,
-        'user': request.user
+        'featured_places': featured_places,
+        'user': request.user,
+        'user_reviews_count': user_reviews_count,
+        'user_bookings_count': user_bookings_count,
+        'user_itineraries_count': user_itineraries_count,
+        'recent_reviews': recent_reviews,
+        'total_places': total_places,
+        'place_types_count': place_types_count,
     }
     return render(request, 'main/dashboard.html', context)
 
 @login_required
 def places_list(request):
-    """List all tourism places"""
+    """Enhanced list view with search and filtering"""
     places = TourismPlace.objects.all()
-    place_type = request.GET.get('type')
-    district = request.GET.get('district')
     
+    # Search functionality
+    search_query = request.GET.get('search')
+    if search_query:
+        places = places.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(district__icontains=search_query) |
+            Q(activities__icontains=search_query)
+        )
+    
+    # Filter by place type
+    place_type = request.GET.get('type')
     if place_type:
         places = places.filter(place_type=place_type)
+    
+    # Filter by district
+    district = request.GET.get('district')
     if district:
-        places = places.filter(district__icontains=district)
+        places = places.filter(district=district)
+    
+    # Filter by difficulty
+    difficulty = request.GET.get('difficulty')
+    if difficulty:
+        places = places.filter(difficulty_level=difficulty)
+    
+    # Sort options
+    sort_by = request.GET.get('sort', 'name')
+    if sort_by == 'rating':
+        places = places.order_by('-rating')
+    elif sort_by == 'name':
+        places = places.order_by('name')
+    elif sort_by == 'district':
+        places = places.order_by('district', 'name')
+    
+    # Pagination
+    paginator = Paginator(places, 12)  # Show 12 places per page
+    page_number = request.GET.get('page')
+    page_places = paginator.get_page(page_number)
+    
+    # Get filter options
+    districts = TourismPlace.objects.values_list('district', flat=True).distinct().order_by('district')
     
     context = {
-        'places': places,
+        'places': page_places,
         'place_types': TourismPlace.PLACE_TYPES,
+        'difficulty_levels': TourismPlace.DIFFICULTY_LEVELS,
+        'districts': districts,
+        'current_search': search_query,
+        'current_type': place_type,
+        'current_district': district,
+        'current_difficulty': difficulty,
+        'current_sort': sort_by,
     }
     return render(request, 'main/places_list.html', context)
 
 @login_required
 def place_detail(request, place_id):
-    """Detailed view of a specific place"""
+    """Enhanced detailed view of a specific place"""
     place = get_object_or_404(TourismPlace, id=place_id)
+    
+    # Get place photos
+    photos = PlacePhoto.objects.filter(place=place, is_approved=True)
+    
+    # Get place reviews
+    reviews = PlaceReview.objects.filter(place=place, is_verified=True).order_by('-created_at')
+    user_review = None
+    if request.user.is_authenticated:
+        user_review = PlaceReview.objects.filter(place=place, user=request.user).first()
+    
+    # Calculate average rating
+    avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+    
+    # Get similar places (same type, different places)
+    similar_places = TourismPlace.objects.filter(
+        place_type=place.place_type
+    ).exclude(id=place.id)[:4]
+    
+    # Get nearby places (same district)
+    nearby_places = TourismPlace.objects.filter(
+        district=place.district
+    ).exclude(id=place.id)[:4]
+    
     context = {
-        'place': place
+        'place': place,
+        'photos': photos,
+        'reviews': reviews,
+        'user_review': user_review,
+        'avg_rating': avg_rating,
+        'similar_places': similar_places,
+        'nearby_places': nearby_places,
     }
     return render(request, 'main/place_detail.html', context)
 
+# Smart Feature Views
+
 @login_required
-def chatbot(request):
-    """Chatbot interface"""
-    messages = ChatMessage.objects.filter(user=request.user)[:10]
-    return render(request, 'main/chatbot.html', {'messages': messages})
+def add_review(request, place_id):
+    """Add or update a review for a place"""
+    place = get_object_or_404(TourismPlace, id=place_id)
+    
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        title = request.POST.get('title')
+        review_text = request.POST.get('review_text')
+        visit_date = request.POST.get('visit_date')
+        
+        review, created = PlaceReview.objects.update_or_create(
+            place=place,
+            user=request.user,
+            defaults={
+                'rating': rating,
+                'title': title,
+                'review_text': review_text,
+                'visit_date': visit_date,
+            }
+        )
+        
+        if created:
+            messages.success(request, 'Review added successfully! It will be visible after verification.')
+        else:
+            messages.success(request, 'Review updated successfully!')
+        
+        return redirect('place_detail', place_id=place_id)
+    
+    return redirect('place_detail', place_id=place_id)
+
+@login_required
+def create_booking(request, place_id):
+    """Create accommodation booking for a place"""
+    place = get_object_or_404(TourismPlace, id=place_id)
+    
+    if request.method == 'POST':
+        hotel_name = request.POST.get('hotel_name')
+        check_in_date = request.POST.get('check_in_date')
+        check_out_date = request.POST.get('check_out_date')
+        guests_count = request.POST.get('guests_count')
+        contact_phone = request.POST.get('contact_phone')
+        special_requests = request.POST.get('special_requests', '')
+        
+        booking = AccommodationBooking.objects.create(
+            user=request.user,
+            place=place,
+            hotel_name=hotel_name,
+            check_in_date=check_in_date,
+            check_out_date=check_out_date,
+            guests_count=guests_count,
+            contact_phone=contact_phone,
+            special_requests=special_requests
+        )
+        
+        messages.success(request, f'Booking request created successfully! Your booking reference is {booking.booking_reference}')
+        return redirect('user_bookings')
+    
+    context = {'place': place}
+    return render(request, 'main/create_booking.html', context)
+
+@login_required
+def user_bookings(request):
+    """List user's accommodation bookings"""
+    bookings = AccommodationBooking.objects.filter(user=request.user).order_by('-created_at')
+    context = {'bookings': bookings}
+    return render(request, 'main/user_bookings.html', context)
+
+@login_required
+def create_itinerary(request):
+    """Create a new travel itinerary"""
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        is_public = request.POST.get('is_public') == 'on'
+        
+        itinerary = TravelItinerary.objects.create(
+            user=request.user,
+            title=title,
+            description=description,
+            start_date=start_date,
+            end_date=end_date,
+            is_public=is_public
+        )
+        
+        messages.success(request, 'Itinerary created successfully!')
+        return redirect('itinerary_detail', itinerary_id=itinerary.id)
+    
+    return render(request, 'main/create_itinerary.html')
+
+@login_required
+def itinerary_detail(request, itinerary_id):
+    """View and manage itinerary details"""
+    itinerary = get_object_or_404(TravelItinerary, id=itinerary_id)
+    
+    # Check if user owns the itinerary or if it's public
+    if itinerary.user != request.user and not itinerary.is_public:
+        messages.error(request, 'You do not have permission to view this itinerary.')
+        return redirect('dashboard')
+    
+    itinerary_places = itinerary.itineraryplace_set.all().order_by('day_number', 'visit_time')
+    context = {
+        'itinerary': itinerary,
+        'itinerary_places': itinerary_places
+    }
+    return render(request, 'main/itinerary_detail.html', context)
 
 @csrf_exempt
 @login_required
-def chatbot_api(request):
-    """API endpoint for chatbot responses"""
+def weather_api(request):
+    """API endpoint to get weather data for a location"""
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            user_message = data.get('message', '').strip().lower()
-            
-            # Simple chatbot responses for Jharkhand tourism
-            responses = {
-                'hello': 'Hello! Welcome to Jharkhand Tourism. How can I help you today?',
-                'hi': 'Hi there! I\'m here to help you explore the beautiful state of Jharkhand.',
-                'places': 'Jharkhand has amazing places like Ranchi, Jamshedpur, Deoghar, Netarhat, Betla National Park, and many more!',
-                'ranchi': 'Ranchi is the capital city of Jharkhand, known for its waterfalls like Hundru Falls, Dassam Falls, and Rock Garden.',
-                'deoghar': 'Deoghar is famous for the Baidyanath Temple, one of the twelve Jyotirlingas. It\'s a major pilgrimage destination.',
-                'netarhat': 'Netarhat is known as the "Queen of Chhota Nagpur" for its scenic beauty and pleasant climate.',
-                'betla': 'Betla National Park is famous for its wildlife including elephants, tigers, leopards, and various bird species.',
-                'culture': 'Jharkhand has rich tribal culture with festivals like Sarhul, Karma, and Sohrai. The state is home to many tribal communities.',
-                'food': 'Try local dishes like Litti Chokha, Rugra, Bamboo Shoot curry, and various tribal delicacies.',
-                'weather': 'Best time to visit Jharkhand is from October to March when the weather is pleasant.',
-                'how to reach': 'Jharkhand is well connected by air, rail, and road. Ranchi and Jamshedpur have airports.',
-            }
-            
-            # Find appropriate response
-            response = "I'm here to help you with information about Jharkhand tourism. You can ask about places to visit, culture, food, weather, or how to reach various destinations."
-            
-            for key, value in responses.items():
-                if key in user_message:
-                    response = value
-                    break
-            
-            # Save chat message
-            chat_message = ChatMessage.objects.create(
-                user=request.user,
-                message=user_message,
-                response=response
-            )
-            
-            return JsonResponse({
-                'success': True,
-                'response': response
-            })
-            
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            })
+        data = json.loads(request.body)
+        lat = data.get('lat')
+        lon = data.get('lon')
+        
+        # Mock weather data - in real implementation, call weather API
+        weather_data = {
+            'temperature': '25°C',
+            'condition': 'Partly Cloudy',
+            'humidity': '65%',
+            'wind_speed': '12 km/h',
+            'icon': 'partly-cloudy'
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'weather': weather_data
+        })
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def upload_photo(request, place_id):
+    """Upload photo for a place"""
+    place = get_object_or_404(TourismPlace, id=place_id)
+    
+    if request.method == 'POST' and request.FILES.get('photo'):
+        photo = PlacePhoto.objects.create(
+            place=place,
+            image=request.FILES['photo'],
+            caption=request.POST.get('caption', ''),
+            uploaded_by=request.user
+        )
+        
+        messages.success(request, 'Photo uploaded successfully! It will be visible after approval.')
+        return redirect('place_detail', place_id=place_id)
+    
+    return redirect('place_detail', place_id=place_id)
+

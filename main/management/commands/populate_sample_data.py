@@ -17,7 +17,8 @@ class Command(BaseCommand):
                 'how_to_reach': 'Located 45 km from Ranchi on the Ranchi-Purulia Road. Regular buses and taxis are available from Ranchi.',
                 'nearby_attractions': 'Jonha Falls, Dasham Falls, Rock Garden',
                 'entry_fee': 'Free',
-                'timings': '6:00 AM to 6:00 PM'
+                'timings': '6:00 AM to 6:00 PM',
+                'image': 'places/hundru_falls.jpg'
             },
             {
                 'name': 'Baidyanath Temple, Deoghar',
@@ -30,7 +31,8 @@ class Command(BaseCommand):
                 'how_to_reach': 'Deoghar is well connected by rail and road. Regular trains from major cities and buses are available.',
                 'nearby_attractions': 'Tapovan, Naulakha Mandir, Basukinath Temple',
                 'entry_fee': 'Free',
-                'timings': '4:00 AM to 3:30 PM, 6:00 PM to 9:00 PM'
+                'timings': '4:00 AM to 3:30 PM, 6:00 PM to 9:00 PM',
+                'image': 'places/baidyanath_temple.jpg'
             },
             {
                 'name': 'Netarhat',
@@ -43,7 +45,8 @@ class Command(BaseCommand):
                 'how_to_reach': 'Netarhat is 154 km from Ranchi. Regular buses and private vehicles can be used to reach.',
                 'nearby_attractions': 'Upper Ghaghri Falls, Lodh Falls, Magnolia Point',
                 'entry_fee': 'Free',
-                'timings': 'Open 24 hours'
+                'timings': 'Open 24 hours',
+                'image': 'places/netarhat.jpg'
             },
             {
                 'name': 'Betla National Park',
@@ -56,7 +59,8 @@ class Command(BaseCommand):
                 'how_to_reach': 'Located 25 km from Daltonganj. Well connected by road from major cities.',
                 'nearby_attractions': 'Palamau Fort, Kamaldah Lake',
                 'entry_fee': 'Indian: ₹30, Foreigner: ₹500, Camera: ₹50',
-                'timings': 'Summer: 6:00 AM to 6:00 PM, Winter: 6:30 AM to 5:30 PM'
+                'timings': 'Summer: 6:00 AM to 6:00 PM, Winter: 6:30 AM to 5:30 PM',
+                'image': 'places/betla_national_park.jpg'
             },
             {
                 'name': 'Rock Garden, Ranchi',
@@ -69,7 +73,8 @@ class Command(BaseCommand):
                 'how_to_reach': 'Located 10 km from Ranchi city center. Local buses and taxis are available.',
                 'nearby_attractions': 'Kanke Dam, Birsa Zoological Park',
                 'entry_fee': 'Adults: ₹10, Children: ₹5',
-                'timings': '9:00 AM to 6:00 PM'
+                'timings': '9:00 AM to 6:00 PM',
+                'image': 'places/rock_garden.jpg'
             },
             {
                 'name': 'Jonha Falls (Gautamdhara)',
@@ -82,7 +87,8 @@ class Command(BaseCommand):
                 'how_to_reach': '40 km from Ranchi on Ranchi-Purulia highway. Regular buses and private vehicles available.',
                 'nearby_attractions': 'Hundru Falls, Hirni Falls',
                 'entry_fee': 'Free',
-                'timings': '6:00 AM to 6:00 PM'
+                'timings': '6:00 AM to 6:00 PM',
+                'image': 'places/jonha_falls.jpg'
             },
             {
                 'name': 'Jagannath Temple, Ranchi',
@@ -95,7 +101,8 @@ class Command(BaseCommand):
                 'how_to_reach': 'Located in the heart of Ranchi city. Easily accessible by local transport.',
                 'nearby_attractions': 'Ranchi Lake, Birsa Munda Park',
                 'entry_fee': 'Free',
-                'timings': '5:00 AM to 12:00 PM, 4:00 PM to 9:00 PM'
+                'timings': '5:00 AM to 12:00 PM, 4:00 PM to 9:00 PM',
+                'image': 'places/jagannath_temple.jpg'
             },
             {
                 'name': 'Jamshedpur (Tata Steel City)',
@@ -108,7 +115,8 @@ class Command(BaseCommand):
                 'how_to_reach': 'Well connected by rail, road, and air. Regular flights and trains from major cities.',
                 'nearby_attractions': 'Jubilee Park, Tata Steel Zoological Park, Dimna Lake',
                 'entry_fee': 'Varies by attraction',
-                'timings': 'City is accessible 24/7'
+                'timings': 'City is accessible 24/7',
+                'image': 'places/jamshedpur.jpg'
             },
             {
                 'name': 'Hazaribagh National Park',
@@ -121,7 +129,8 @@ class Command(BaseCommand):
                 'how_to_reach': 'Located 19 km from Hazaribagh town. Well connected by road from Ranchi and other major cities.',
                 'nearby_attractions': 'Hazaribagh Lake, Canary Hill',
                 'entry_fee': 'Indian: ₹25, Foreigner: ₹300',
-                'timings': '6:00 AM to 6:00 PM'
+                'timings': '6:00 AM to 6:00 PM',
+                'image': 'places/hazaribagh_national_park.jpg'
             },
             {
                 'name': 'Ranchi Hill (Pahari Mandir)',
@@ -134,7 +143,8 @@ class Command(BaseCommand):
                 'how_to_reach': 'Located in Ranchi city. Easily accessible by local transport and ropeway.',
                 'nearby_attractions': 'Ranchi Lake, State Museum',
                 'entry_fee': 'Free for temple, Ropeway: ₹50',
-                'timings': '5:00 AM to 8:00 PM'
+                'timings': '5:00 AM to 8:00 PM',
+                'image': 'places/ranchi_hill.jpg'
             },
             {
                 'name': 'Dassam Falls',
@@ -147,7 +157,8 @@ class Command(BaseCommand):
                 'how_to_reach': '40 km from Ranchi on Ranchi-Tata road. Regular buses and private vehicles available.',
                 'nearby_attractions': 'Hundru Falls, Jonha Falls',
                 'entry_fee': 'Free',
-                'timings': '6:00 AM to 6:00 PM'
+                'timings': '6:00 AM to 6:00 PM',
+                'image': 'places/dassam_falls.jpg'
             },
             {
                 'name': 'Palamu Tiger Reserve',
@@ -160,7 +171,8 @@ class Command(BaseCommand):
                 'how_to_reach': 'Well connected by road from Ranchi and Patna. Nearest railway station is Daltonganj.',
                 'nearby_attractions': 'Betla National Park, Palamau Fort',
                 'entry_fee': 'Indian: ₹30, Foreigner: ₹500, Vehicle: ₹100',
-                'timings': '6:00 AM to 6:00 PM'
+                'timings': '6:00 AM to 6:00 PM',
+                'image': 'places/palamu_tiger_reserve.jpg'
             }
         ]
 

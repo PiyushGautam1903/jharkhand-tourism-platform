@@ -1,201 +1,157 @@
 // Main JavaScript for Jharkhand Tourism Platform
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Chatbot widget functionality
-    initializeChatbot();
-    
     // Initialize animations
     initializeAnimations();
     
     // Initialize responsive features
     initializeResponsiveFeatures();
+    
+    // Initialize smart features
+    initializeSmartFeatures();
+    
+    // Initialize weather widget
+    initializeWeatherWidget();
+    
+    // Initialize photo gallery
+    initializePhotoGallery();
 });
 
-// Chatbot Widget
-function initializeChatbot() {
-    const chatbotToggle = document.getElementById('chatbot-toggle');
-    const chatbotPopup = document.getElementById('chatbot-popup');
-    const chatbotClose = document.getElementById('chatbot-close');
-    const chatInput = document.getElementById('chat-input');
-    const sendMessage = document.getElementById('send-message');
-    const voiceInput = document.getElementById('voice-input');
-    const chatMessages = document.getElementById('chat-messages');
+// Smart Tourism Features
+function initializeSmartFeatures() {
+    // Initialize search functionality
+    initializeSearch();
+    
+    // Initialize rating system
+    initializeRatingSystem();
+    
+    // Initialize booking system
+    initializeBookingSystem();
+    
+    // Initialize itinerary planner
+    initializeItineraryPlanner();
+}
 
-    if (!chatbotToggle) return;
+// Smart Search with Filters
+function initializeSearch() {
+    const searchInput = document.getElementById('place-search');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const placeCards = document.querySelectorAll('.place-card');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            filterPlaces(searchTerm);
+        });
+    }
+    
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const filterType = this.getAttribute('data-filter');
+            applyFilter(filterType);
+            
+            // Update active state
+            filterButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+}
 
-    // Toggle chatbot popup
-    chatbotToggle.addEventListener('click', function() {
-        const isVisible = chatbotPopup.style.display !== 'none';
-        chatbotPopup.style.display = isVisible ? 'none' : 'block';
+// Rating System
+function initializeRatingSystem() {
+    const ratingStars = document.querySelectorAll('.rating-star');
+    
+    ratingStars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.getAttribute('data-rating'));
+            updateRatingDisplay(rating, this.closest('.rating-container'));
+        });
         
-        if (!isVisible) {
-            chatInput.focus();
-            scrollChatToBottom();
+        star.addEventListener('mouseover', function() {
+            const rating = parseInt(this.getAttribute('data-rating'));
+            highlightRating(rating, this.closest('.rating-container'));
+        });
+    });
+}
+
+// Booking System
+function initializeBookingSystem() {
+    const bookingForms = document.querySelectorAll('.booking-form');
+    
+    bookingForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleBookingSubmission(this);
+        });
+    });
+    
+    // Date picker validation
+    const checkInDates = document.querySelectorAll('input[name="check_in_date"]');
+    const checkOutDates = document.querySelectorAll('input[name="check_out_date"]');
+    
+    checkInDates.forEach(input => {
+        input.addEventListener('change', function() {
+            const checkOutDate = this.closest('form').querySelector('input[name="check_out_date"]');
+            if (checkOutDate) {
+                checkOutDate.min = this.value;
+            }
+        });
+    });
+}
+
+// Itinerary Planner
+function initializeItineraryPlanner() {
+    const addPlaceButtons = document.querySelectorAll('.add-to-itinerary');
+    const itineraryContainer = document.getElementById('itinerary-container');
+    
+    addPlaceButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const placeId = this.getAttribute('data-place-id');
+            const placeName = this.getAttribute('data-place-name');
+            addToItinerary(placeId, placeName);
+        });
+    });
+    
+    // Drag and drop for itinerary reordering
+    if (itineraryContainer) {
+        initializeDragAndDrop(itineraryContainer);
+    }
+}
+
+// Weather Widget
+function initializeWeatherWidget() {
+    const weatherWidgets = document.querySelectorAll('.weather-widget');
+    
+    weatherWidgets.forEach(widget => {
+        const lat = widget.getAttribute('data-lat');
+        const lon = widget.getAttribute('data-lon');
+        const placeName = widget.getAttribute('data-place');
+        
+        if (lat && lon) {
+            fetchWeatherData(lat, lon, placeName, widget);
         }
     });
+}
 
-    // Close chatbot
-    if (chatbotClose) {
-        chatbotClose.addEventListener('click', function() {
-            chatbotPopup.style.display = 'none';
+// Photo Gallery
+function initializePhotoGallery() {
+    const galleryItems = document.querySelectorAll('.gallery-item');
+    const photoUploadForms = document.querySelectorAll('.photo-upload-form');
+    
+    // Initialize lightbox for gallery
+    galleryItems.forEach((item, index) => {
+        item.addEventListener('click', function() {
+            openLightbox(index, galleryItems);
         });
-    }
-
-    // Send message on Enter
-    if (chatInput) {
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                sendChatMessage();
-            }
+    });
+    
+    // Handle photo uploads
+    photoUploadForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handlePhotoUpload(this);
         });
-    }
-
-    // Send message on button click
-    if (sendMessage) {
-        sendMessage.addEventListener('click', sendChatMessage);
-    }
-
-    // Voice input
-    if (voiceInput && 'webkitSpeechRecognition' in window) {
-        const recognition = new webkitSpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'en-US';
-
-        voiceInput.addEventListener('click', function() {
-            recognition.start();
-            this.innerHTML = '<i class="fas fa-stop text-danger"></i>';
-            this.classList.add('btn-outline-danger');
-            this.classList.remove('btn-outline-primary');
-        });
-
-        recognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript;
-            chatInput.value = transcript;
-            sendChatMessage();
-        };
-
-        recognition.onend = function() {
-            voiceInput.innerHTML = '<i class="fas fa-microphone"></i>';
-            voiceInput.classList.remove('btn-outline-danger');
-            voiceInput.classList.add('btn-outline-primary');
-        };
-    } else if (voiceInput) {
-        voiceInput.style.display = 'none';
-    }
-
-    // Send chat message function
-    function sendChatMessage() {
-        const message = chatInput.value.trim();
-        if (!message) return;
-
-        // Add user message to chat
-        addChatMessage(message, true);
-
-        // Show typing indicator
-        showTypingIndicator();
-
-        // Send to API
-        fetch('/api/chatbot/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken(),
-            },
-            body: JSON.stringify({ message: message })
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideTypingIndicator();
-            if (data.success) {
-                addChatMessage(data.response, false);
-            } else {
-                addChatMessage('Sorry, I encountered an error. Please try again.', false);
-            }
-        })
-        .catch(error => {
-            hideTypingIndicator();
-            addChatMessage('Sorry, I am unable to respond right now. Please try again.', false);
-        });
-
-        chatInput.value = '';
-    }
-
-    // Add message to chat
-    function addChatMessage(message, isUser) {
-        if (!chatMessages) return;
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'} mb-2`;
-        
-        const time = new Date().toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
-        });
-
-        if (isUser) {
-            messageDiv.innerHTML = `
-                <div class="text-end">
-                    <div class="bg-primary text-white p-2 rounded d-inline-block" style="max-width: 80%;">
-                        ${message}
-                    </div>
-                    <div><small class="text-muted">${time}</small></div>
-                </div>
-            `;
-        } else {
-            messageDiv.innerHTML = `
-                <div>
-                    <div class="bg-light p-2 rounded d-inline-block" style="max-width: 80%;">
-                        ${message}
-                    </div>
-                    <div><small class="text-muted">${time}</small></div>
-                </div>
-            `;
-        }
-
-        chatMessages.appendChild(messageDiv);
-        scrollChatToBottom();
-    }
-
-    // Show typing indicator
-    function showTypingIndicator() {
-        if (!chatMessages) return;
-
-        const typingDiv = document.createElement('div');
-        typingDiv.id = 'typing-indicator';
-        typingDiv.className = 'message bot-message mb-2';
-        typingDiv.innerHTML = `
-            <div>
-                <div class="bg-light p-2 rounded d-inline-block">
-                    <div class="typing">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        chatMessages.appendChild(typingDiv);
-        scrollChatToBottom();
-    }
-
-    // Hide typing indicator
-    function hideTypingIndicator() {
-        const typing = document.getElementById('typing-indicator');
-        if (typing) {
-            typing.remove();
-        }
-    }
-
-    // Scroll chat to bottom
-    function scrollChatToBottom() {
-        if (chatMessages) {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-    }
+    });
 }
 
 // Get CSRF token

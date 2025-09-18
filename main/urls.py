@@ -9,6 +9,15 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('places/', views.places_list, name='places_list'),
     path('places/<int:place_id>/', views.place_detail, name='place_detail'),
-    path('chatbot/', views.chatbot, name='chatbot'),
-    path('api/chatbot/', views.chatbot_api, name='chatbot_api'),
+    
+    # Smart Features
+    path('places/<int:place_id>/review/', views.add_review, name='add_review'),
+    path('places/<int:place_id>/booking/', views.create_booking, name='create_booking'),
+    path('places/<int:place_id>/upload-photo/', views.upload_photo, name='upload_photo'),
+    path('bookings/', views.user_bookings, name='user_bookings'),
+    path('itinerary/create/', views.create_itinerary, name='create_itinerary'),
+    path('itinerary/<int:itinerary_id>/', views.itinerary_detail, name='itinerary_detail'),
+    
+    # APIs
+    path('api/weather/', views.weather_api, name='weather_api'),
 ]

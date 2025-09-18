@@ -72,15 +72,63 @@
                         <p class="text-muted">{{ place.how_to_reach }}</p>
                     </div>
 
+                    <!-- Enhanced Information Sections -->
+                    {% if place.activities %}
+                    <div class="mb-4">
+                        <h5><i class="fas fa-hiking text-warning me-2"></i>Activities</h5>
+                        <p class="text-muted">{{ place.activities }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if place.local_food %}
+                    <div class="mb-4">
+                        <h5><i class="fas fa-utensils text-danger me-2"></i>Local Food</h5>
+                        <p class="text-muted">{{ place.local_food }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if place.safety_tips %}
+                    <div class="mb-4">
+                        <h5><i class="fas fa-shield-alt text-success me-2"></i>Safety Tips</h5>
+                        <p class="text-muted">{{ place.safety_tips }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if place.photography_tips %}
+                    <div class="mb-4">
+                        <h5><i class="fas fa-camera text-info me-2"></i>Photography Tips</h5>
+                        <p class="text-muted">{{ place.photography_tips }}</p>
+                    </div>
+                    {% endif %}
+
                     <!-- Action Buttons -->
-                    <div class="d-grid gap-2 d-md-block">
+                    <div class="d-grid gap-2 d-md-block mb-4">
                         <a href="https://maps.google.com?q={{ place.latitude }},{{ place.longitude }}" 
                            target="_blank" class="btn btn-success btn-lg">
-                            <i class="fas fa-map-marked-alt me-2"></i>Get Directions
+                            <i class="fas fa-directions me-2"></i>Get Directions
                         </a>
                         <button class="btn btn-outline-primary btn-lg" onclick="sharePlace()">
                             <i class="fas fa-share-alt me-2"></i>Share
                         </button>
+                        <a href="{% url 'create_booking' place.id %}" class="btn btn-outline-warning btn-lg">
+                            <i class="fas fa-bed me-2"></i>Book Stay
+                        </a>
+                        <button class="btn btn-outline-info btn-lg" onclick="addToItinerary({{ place.id }}, '{{ place.name }}')">
+                            <i class="fas fa-plus me-2"></i>Add to Itinerary
+                        </button>
+                    </div>
+                    
+                    <!-- Photo Upload -->
+                    <div class="mb-4">
+                        <h5><i class="fas fa-camera me-2"></i>Share Your Photos</h5>
+                        <form action="{% url 'upload_photo' place.id %}" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                            {% csrf_token %}
+                            <input type="file" name="photo" accept="image/*" class="form-control" required>
+                            <input type="text" name="caption" placeholder="Add caption..." class="form-control">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -95,6 +143,43 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-star text-warning me-2"></i>
+                                <div>
+                                    <strong class="fs-5">{{ place.rating }}/5</strong>
+                                    <small class="text-muted d-block">Overall Rating</small>
+                                </div>
+                                <div class="ms-auto">
+                                    <small class="text-muted">{{ reviews.count }} reviews</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if place.difficulty_level %}
+                        <div class="col-12">
+                            <div class="d-flex">
+                                <i class="fas fa-mountain text-danger me-2 mt-1"></i>
+                                <div>
+                                    <small class="text-muted d-block">Difficulty Level</small>
+                                    <strong>{{ place.get_difficulty_level_display }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if place.altitude %}
+                        <div class="col-12">
+                            <div class="d-flex">
+                                <i class="fas fa-chart-line text-info me-2 mt-1"></i>
+                                <div>
+                                    <small class="text-muted d-block">Altitude</small>
+                                    <strong>{{ place.altitude }}m above sea level</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                         {% if place.best_time_to_visit %}
                         <div class="col-12">
                             <div class="d-flex">
@@ -143,40 +228,181 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Weather Widget -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cloud-sun me-2"></i>Current Weather</h5>
+                </div>
+                <div class="card-body">
+                    <div class="weather-widget" data-lat="{{ place.latitude }}" data-lon="{{ place.longitude }}" data-place="{{ place.name }}">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary mb-2" role="status">
+                                <span class="visually-hidden">Loading weather...</span>
+                            </div>
+                            <p class="text-muted">Loading weather information...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Photo Gallery -->
+            {% if photos %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-images me-2"></i>Photo Gallery</h5>
+                </div>
+                <div class="card-body p-2">
+                    <div class="row g-2">
+                        {% for photo in photos|slice:":6" %}
+                        <div class="col-4">
+                            <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" 
+                                 class="img-fluid rounded gallery-item cursor-pointer" 
+                                 onclick="openPhotoModal('{{ photo.image.url }}', '{{ photo.caption }}', '{{ photo.uploaded_by.username }}')"
+                                 title="{{ photo.caption }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if photos.count > 6 %}
+                    <div class="text-center mt-2">
+                        <small class="text-muted">+{{ photos.count|add:"-6" }} more photos</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Map -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-map me-2"></i>Location</h5>
+                    <h5 class="mb-0"><i class="fas fa-map me-2"></i>Location & Directions</h5>
                 </div>
-                <div class="card-body p-0">
-                    <div id="map" style="height: 300px; width: 100%;"></div>
-                </div>
-                <div class="card-footer">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-map-marker-alt fa-3x text-success mb-3"></i>
+                        <h6>{{ place.name }}</h6>
+                        <p class="text-muted mb-3">{{ place.district }}, Jharkhand</p>
+                        <p class="text-sm"><strong>Coordinates:</strong> {{ place.latitude }}, {{ place.longitude }}</p>
+                    </div>
                     <div class="d-grid">
                         <a href="https://maps.google.com?q={{ place.latitude }},{{ place.longitude }}" 
-                           target="_blank" class="btn btn-success">
-                            <i class="fas fa-external-link-alt me-1"></i>Open in Google Maps
+                           target="_blank" class="btn btn-success btn-lg">
+                            <i class="fas fa-directions me-2"></i>Get Directions in Google Maps
                         </a>
                     </div>
                 </div>
             </div>
 
+            <!-- User Reviews and Rating -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Reviews & Rating</h5>
+                </div>
+                <div class="card-body">
+                    {% if user_review %}
+                    <div class="alert alert-info">
+                        <strong>Your Review:</strong> {{ user_review.title }}<br>
+                        <div class="rating-display">
+                            {% for i in "12345" %}
+                                <i class="fas fa-star {% if forloop.counter <= user_review.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#reviewForm">
+                        <i class="fas fa-plus me-1"></i>Write Review
+                    </button>
+                    <div class="collapse mt-3" id="reviewForm">
+                        <form action="{% url 'add_review' place.id %}" method="post">
+                            {% csrf_token %}
+                            <div class="mb-2">
+                                <label class="form-label">Rating</label>
+                                <div class="rating-input">
+                                    {% for i in "12345" %}
+                                    <i class="fas fa-star rating-star text-muted" data-rating="{{ forloop.counter }}" style="cursor: pointer;"></i>
+                                    {% endfor %}
+                                    <input type="hidden" name="rating" id="rating-value" required>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" name="title" class="form-control form-control-sm" placeholder="Review title" required>
+                            </div>
+                            <div class="mb-2">
+                                <textarea name="review_text" class="form-control form-control-sm" rows="3" placeholder="Share your experience..." required></textarea>
+                            </div>
+                            <div class="mb-2">
+                                <input type="date" name="visit_date" class="form-control form-control-sm" required>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-sm">Submit Review</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Recent Reviews -->
+                    {% if reviews %}
+                    <hr>
+                    <h6>Recent Reviews:</h6>
+                    {% for review in reviews|slice:":3" %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ review.title }}</strong>
+                            <div class="rating-display">
+                                {% for i in "12345" %}
+                                    <i class="fas fa-star {% if forloop.counter <= review.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <small class="text-muted">by {{ review.user.username }} on {{ review.visit_date }}</small>
+                        <p class="small mt-1">{{ review.review_text|truncatewords:20 }}</p>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            
             <!-- Related Places -->
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="fas fa-compass me-2"></i>Explore More</h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-2">
+                    {% if similar_places %}
+                    <h6>Similar {{ place.get_place_type_display }} Places:</h6>
+                    {% for similar in similar_places|slice:":2" %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                        <div>
+                            <a href="{% url 'place_detail' similar.id %}" class="text-decoration-none">
+                                <strong>{{ similar.name }}</strong>
+                            </a>
+                            <small class="text-muted d-block">{{ similar.district }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <hr>
+                    {% endif %}
+                    
+                    {% if nearby_places %}
+                    <h6>More in {{ place.district }}:</h6>
+                    {% for nearby in nearby_places|slice:":2" %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-location-arrow text-success me-2"></i>
+                        <div>
+                            <a href="{% url 'place_detail' nearby.id %}" class="text-decoration-none">
+                                <strong>{{ nearby.name }}</strong>
+                            </a>
+                            <small class="text-muted d-block">{{ nearby.get_place_type_display }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 mt-3">
                         <a href="{% url 'places_list' %}?type={{ place.place_type }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-filter me-1"></i>Similar Places
+                            <i class="fas fa-filter me-1"></i>All {{ place.get_place_type_display }} Places
                         </a>
                         <a href="{% url 'places_list' %}?district={{ place.district }}" class="btn btn-outline-success btn-sm">
-                            <i class="fas fa-map-marker-alt me-1"></i>Places in {{ place.district }}
-                        </a>
-                        <a href="{% url 'chatbot' %}" class="btn btn-outline-info btn-sm">
-                            <i class="fas fa-robot me-1"></i>Ask About This Place
+                            <i class="fas fa-map-marker-alt me-1"></i>All Places in {{ place.district }}
                         </a>
                     </div>
                 </div>
@@ -185,40 +411,7 @@
     </div>
 </div>
 
-<!-- Google Maps -->
 <script>
-function initMap() {
-    const placeLocation = { lat: {{ place.latitude }}, lng: {{ place.longitude }} };
-    
-    const map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 15,
-        center: placeLocation,
-    });
-    
-    const marker = new google.maps.Marker({
-        position: placeLocation,
-        map: map,
-        title: "{{ place.name }}",
-    });
-
-    const infoWindow = new google.maps.InfoWindow({
-        content: `
-            <div>
-                <h6>{{ place.name }}</h6>
-                <p class="mb-1">{{ place.district }}, Jharkhand</p>
-                <small class="text-muted">{{ place.get_place_type_display }}</small>
-            </div>
-        `
-    });
-
-    marker.addListener("click", () => {
-        infoWindow.open(map, marker);
-    });
-    
-    // Open info window by default
-    infoWindow.open(map, marker);
-}
-
 function sharePlace() {
     if (navigator.share) {
         navigator.share({
@@ -233,9 +426,169 @@ function sharePlace() {
         });
     }
 }
-</script>
 
-<script async defer 
-    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap">
+// Rating system
+document.addEventListener('DOMContentLoaded', function() {
+    const ratingStars = document.querySelectorAll('.rating-star');
+    const ratingValue = document.getElementById('rating-value');
+    
+    ratingStars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.dataset.rating);
+            ratingValue.value = rating;
+            
+            // Update star display
+            ratingStars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.remove('text-muted');
+                    s.classList.add('text-warning');
+                } else {
+                    s.classList.remove('text-warning');
+                    s.classList.add('text-muted');
+                }
+            });
+        });
+        
+        star.addEventListener('mouseover', function() {
+            const rating = parseInt(this.dataset.rating);
+            ratingStars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.add('text-warning');
+                    s.classList.remove('text-muted');
+                }
+            });
+        });
+    });
+    
+    const ratingContainer = document.querySelector('.rating-input');
+    if (ratingContainer) {
+        ratingContainer.addEventListener('mouseleave', function() {
+            const currentRating = parseInt(ratingValue.value) || 0;
+            ratingStars.forEach((s, index) => {
+                if (index < currentRating) {
+                    s.classList.add('text-warning');
+                    s.classList.remove('text-muted');
+                } else {
+                    s.classList.remove('text-warning');
+                    s.classList.add('text-muted');
+                }
+            });
+        });
+    }
+    
+    // Weather widget
+    loadWeatherData();
+});
+
+function addToItinerary(placeId, placeName) {
+    // Show modal or redirect to itinerary creation
+    if (confirm(`Add ${placeName} to your itinerary?`)) {
+        // In a real implementation, this would make an AJAX call
+        alert('Feature coming soon! Use the "Plan Itinerary" option in Smart Features menu.');
+    }
+}
+
+function openPhotoModal(imageUrl, caption, uploader) {
+    // Create and show photo modal
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">${caption || 'Photo'}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <img src="${imageUrl}" class="img-fluid w-100" alt="${caption}">
+                </div>
+                <div class="modal-footer">
+                    <small class="text-muted">Uploaded by: ${uploader}</small>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+    });
+}
+
+function loadWeatherData() {
+    const weatherWidget = document.querySelector('.weather-widget');
+    if (!weatherWidget) return;
+    
+    const lat = weatherWidget.dataset.lat;
+    const lon = weatherWidget.dataset.lon;
+    const placeName = weatherWidget.dataset.place;
+    
+    fetch('/api/weather/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ lat: lat, lon: lon, place: placeName })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const weather = data.weather;
+            weatherWidget.innerHTML = `
+                <div class="text-center">
+                    <div class="row">
+                        <div class="col-6">
+                            <i class="fas fa-thermometer-half fa-2x text-danger mb-2"></i>
+                            <div><strong>${weather.temperature}</strong></div>
+                            <small class="text-muted">Temperature</small>
+                        </div>
+                        <div class="col-6">
+                            <i class="fas fa-cloud fa-2x text-info mb-2"></i>
+                            <div><strong>${weather.condition}</strong></div>
+                            <small class="text-muted">Condition</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <i class="fas fa-tint text-primary"></i> ${weather.humidity}
+                        </div>
+                        <div class="col-6">
+                            <i class="fas fa-wind text-success"></i> ${weather.wind_speed}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            weatherWidget.innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="fas fa-exclamation-triangle mb-2"></i>
+                    <p>Weather data not available</p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        weatherWidget.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-exclamation-triangle mb-2"></i>
+                <p>Unable to load weather data</p>
+            </div>
+        `;
+    });
+}
+
+// Add CSS for cursor pointer
+const style = document.createElement('style');
+style.textContent = `
+    .cursor-pointer { cursor: pointer; }
+    .gallery-item:hover { transform: scale(1.05); transition: transform 0.2s; }
+    .rating-star:hover { transform: scale(1.2); transition: transform 0.1s; }
+`;
+document.head.appendChild(style);
 </script>
 {% endblock %}

@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ itinerary.title }} - Itinerary - Jharkhand Tourism{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">{{ itinerary.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h4 class="mb-1">{{ itinerary.title }}</h4>
+                            <small><i class="fas fa-user me-1"></i>Created by {{ itinerary.user.username }}</small>
+                        </div>
+                        <div class="text-end">
+                            {% if itinerary.is_public %}
+                                <span class="badge bg-success mb-1">Public</span>
+                            {% else %}
+                                <span class="badge bg-warning mb-1">Private</span>
+                            {% endif %}
+                            <div>
+                                <small>{{ itinerary.created_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if itinerary.description %}
+                        <p class="text-muted">{{ itinerary.description }}</p>
+                        <hr>
+                    {% endif %}
+                    
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4">
+                            <i class="fas fa-calendar-alt fa-2x text-success mb-2"></i>
+                            <h6>Start Date</h6>
+                            <p class="mb-0">{{ itinerary.start_date|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-calendar-check fa-2x text-info mb-2"></i>
+                            <h6>End Date</h6>
+                            <p class="mb-0">{{ itinerary.end_date|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                            <h6>Duration</h6>
+                            <p class="mb-0">{{ itinerary.end_date|timeuntil:itinerary.start_date|slice:":-11" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Itinerary Places -->
+            {% if itinerary_places %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-route me-2"></i>Trip Schedule</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% regroup itinerary_places by day_number as days %}
+                            {% for day in days %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0 text-primary">
+                                            <i class="fas fa-calendar-day me-2"></i>Day {{ day.grouper }}
+                                        </h6>
+                                    </div>
+                                    
+                                    {% for place_item in day.list %}
+                                        <div class="d-flex align-items-center mb-2 ps-4">
+                                            {% if place_item.visit_time %}
+                                                <span class="badge bg-secondary me-3">{{ place_item.visit_time|time:"H:i" }}</span>
+                                            {% endif %}
+                                            <div class="flex-grow-1">
+                                                <strong>{{ place_item.place.name }}</strong>
+                                                <small class="text-muted d-block">{{ place_item.place.district }}, Jharkhand</small>
+                                                {% if place_item.notes %}
+                                                    <small class="text-info">Notes: {{ place_item.notes }}</small>
+                                                {% endif %}
+                                            </div>
+                                            <a href="{% url 'place_detail' place_item.place.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-map fa-3x text-muted mb-3"></i>
+                        <h5>No Places Added Yet</h5>
+                        <p class="text-muted">Start building your itinerary by adding places from our extensive database.</p>
+                        <a href="{% url 'places_list' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Places to Itinerary
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'places_list' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Places
+                        </a>
+                        {% if itinerary.user == request.user %}
+                            <button class="btn btn-success" onclick="shareItinerary()">
+                                <i class="fas fa-share me-2"></i>Share Itinerary
+                            </button>
+                        {% endif %}
+                        <a href="{% url 'user_bookings' %}" class="btn btn-warning">
+                            <i class="fas fa-bed me-2"></i>Book Accommodations
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trip Statistics -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Trip Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <i class="fas fa-map-marker-alt fa-2x text-primary mb-1"></i>
+                            <h4>{{ itinerary_places|length }}</h4>
+                            <small class="text-muted">Places</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <i class="fas fa-calendar fa-2x text-success mb-1"></i>
+                            <h4>{{ days|length|default:0 }}</h4>
+                            <small class="text-muted">Days</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Places -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Suggested Places</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Based on your itinerary, you might also like:</p>
+                    <div class="text-center">
+                        <a href="{% url 'places_list' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-search me-1"></i>Browse All Places
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function shareItinerary() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ itinerary.title }} - Jharkhand Tourism',
+            text: 'Check out my Jharkhand travel itinerary!',
+            url: window.location.href
+        });
+    } else {
+        // Fallback: copy URL to clipboard
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Itinerary link copied to clipboard!');
+        });
+    }
+}
+</script>
+{% endblock %}

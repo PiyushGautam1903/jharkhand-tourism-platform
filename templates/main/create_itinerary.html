@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Plan Itinerary - Jharkhand Tourism{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-route me-2"></i>Plan Your Jharkhand Trip</h4>
+                    <small>Create a personalized travel itinerary</small>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="title" class="form-label">Trip Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       placeholder="e.g., Jharkhand Adventure Tour 2024" required>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="description" class="form-label">Trip Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" 
+                                          placeholder="Describe your trip plans, preferences, and goals..."></textarea>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="start_date" class="form-label">Start Date *</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="end_date" class="form-label">End Date *</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" required>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_public" name="is_public">
+                                    <label class="form-check-label" for="is_public">
+                                        Make this itinerary public (others can view and get inspiration)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-4">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Pro Tip:</strong> After creating your itinerary, you can add places from our extensive database of 109+ tourist destinations across Jharkhand!
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-plus-circle me-2"></i>Create Itinerary
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Start Guide -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>How to Plan Your Trip</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-plus-circle fa-2x text-info mb-2"></i>
+                            <h6>1. Create Itinerary</h6>
+                            <small class="text-muted">Start by creating your basic trip plan with dates and description</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-map-marked-alt fa-2x text-success mb-2"></i>
+                            <h6>2. Add Places</h6>
+                            <small class="text-muted">Browse our 109+ destinations and add them to your itinerary</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-calendar-alt fa-2x text-warning mb-2"></i>
+                            <h6>3. Schedule & Book</h6>
+                            <small class="text-muted">Organize by days and book accommodations for your trip</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('start_date').min = today;
+    
+    // Update end date min when start date changes
+    document.getElementById('start_date').addEventListener('change', function() {
+        document.getElementById('end_date').min = this.value;
+    });
+});
+</script>
+{% endblock %}
